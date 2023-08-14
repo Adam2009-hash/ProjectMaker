@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import io
 import base64
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='C:\\Users\\ashto\\Project\\Template')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', columns=[])
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -20,15 +20,24 @@ def analyze():
         return "No selected file"
 
     data = pd.read_csv(file)
+    columns = data.columns.tolist()
 
-    # Perform data analysis and visualization
+    x_column = request.form.get('x_column')
+    y_column = request.form.get('y_column')
+
     plt.figure(figsize=(10, 6))
-    data.plot(kind='bar', x='x_column', y='y_column')
-    plt.title('Data Visualization')
-    plt.xlabel('X Column')
-    plt.ylabel('Y Column')
 
-    # Save the plot to a BytesIO object
+    if data[y_column].dtype == 'object':
+        data[y_column].value_counts().plot(kind='bar')
+        plt.title('Categorical Data Visualization')
+        plt.xlabel('Categories')
+        plt.ylabel('Frequency')
+    else:
+        plt.scatter(data[x_column], data[y_column])
+        plt.title('Numerical Data Visualization')
+        plt.xlabel('X Column')
+        plt.ylabel('Y Column')
+
     img_stream = io.BytesIO()
     plt.savefig(img_stream, format='png')
     img_stream.seek(0)
